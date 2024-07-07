@@ -6,6 +6,7 @@ import json
 
 with open('table.json', 'r') as file:
     table = json.load(file)
+    file.close()
 acceptableColorList = [[255,255,255],[27,150,206]]
 imageName = "Images/tech.png"
 
@@ -55,7 +56,7 @@ def splitImage(im):
     for i in range(im.size[1]):
         if i in override:
             continue
-        if isSimilarColor(linePixel, pixel[centerX, i], 3):
+        if isSimilarColor(linePixel, pixel[centerX, i], 15):
             if alternate == 1:
                 alternate = 0
                 override = range(i, i+10)
@@ -87,7 +88,13 @@ def splitImage(im):
 
 def updateTable(parsedName, name):
     table[parsedName] = name
+def writeTable():
+    with open("table.json", "w+") as output:
+        json.dump(table, output)
+        print('succesfully wrote table')
+        output.close()
 
+    
 
 def parseImages(image, usetable):
     num = None
@@ -107,11 +114,10 @@ def parseImages(image, usetable):
 
     name = name.replace("Envoy", "").replace("Leader", "").replace("Warlord", "").replace("Saint", "")
     if num == None:
-        code = 2
+        num = 0
     if name == "":
         code = 3
     if usetable:
-
         if name in table:
             name = table[name]
         else:

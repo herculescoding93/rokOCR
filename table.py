@@ -5,7 +5,8 @@ import cv2
 import json 
 
 names = {}
-for i in functions.splitImage(Image.open("Images/tech.png")):
+for i in functions.splitImage(Image.open("Images/building.png")):
+    time.sleep(0.1)
     cv2.imshow("OCR Table Maker", i)
     cv2.waitKey(1)
     res = input("What is the name of this user?\n")
@@ -16,4 +17,6 @@ for i in functions.splitImage(Image.open("Images/tech.png")):
     names[parse[0]] = res
 with open("table.json","w+") as tableFile:
     json.dump(names, tableFile)
+
+
     

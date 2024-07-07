@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pytesseract
 import functions
-
+import csv
 
 
 class User():
@@ -35,29 +35,51 @@ bewareOf = []
 
 
 data = {}
-files = ["Images/tech.png"]
-print("tech" in files[0])
+files = []
+for i in os.listdir("Images"):
+    files.append("Images/" + i)
+for file in files:
+    res = functions.splitImage(Image.open(file))
+    for i in res:
+        parse = functions.parseImages(i, True)
+        name = parse[0]
+        value = parse[1]
+        repCode = parse[2]
+        if repCode == 1:
+            cv2.imshow("Lookup Failure", i)
+            cv2.waitKey(1)
+            realName = input("Lookup Failed, can you please type the name shown in the image?\n")
+            functions.updateTable(parse[0], realName)
+            functions.writeTable()
+            print("Updated table")
+            name = realName
+        if repCode == 2:
+            value = 0
+        if name in data:
+            if "tech" in file.lower():
+                data[name].updateTech(value)
+            if "power" in file.lower():
+                data[name].updatePower(value)
+            if "building" in file.lower():
+                data[name].updateBuilding(value)
+            if "power" in file.lower():
+                data[name].updatePower(value)
+        else:
 
-res = functions.splitImage(Image.open(files[0]))
-for i in res:
-    parse = functions.parseImages(i, True)
-    name = parse[0]
-    value = parse[1]
-    repCode = parse[2]
-    if repCode == 1:
-        realName = input("Lookup Failed, can you please type the name shown in the image?\n")
-        functions.updateTable(parse[0], realName)
-        print("Updated table")
-        name = realName
-    if name in data:
-        data[name].updateTech(value)
-    user = User(name)
-    user.updateTech(value)
-    data[name] = user
+            user = User(name)
+            if "tech" in file.lower():
+                user.updateTech(value)
+            if "power" in file.lower():
+                user.updatePower(value)
+            if "building" in file.lower():
+                user.updateBuilding(value)
+            if "power" in file.lower():
+                user.updatePower(value)
+            data[name] = user
 
 for i in data.values():
     res = i.userInfo()
-    print(f"{res['name']}: {res['tech']}")
+    print(f"{res['name']}, tech: {res['tech']}, building: {res['building']}")
 
 
 # result = reader.readtext('output/User.1.png')
