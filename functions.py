@@ -2,6 +2,10 @@ import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont
 import pytesseract
+import json
+
+with open('table.json', 'r') as file:
+    table = json.load(file)
 acceptableColorList = [[255,255,255],[27,150,206]]
 imageName = "Images/tech.png"
 
@@ -14,7 +18,7 @@ def isSimilarColor(col1, col2, tolerance):
     array = []
     for i in range(3):
         array.append(abs(col1[i] - col2[i] <= tolerance))
-    if False in array:
+    if False in array:  
         return False
     else:
         return True
@@ -80,8 +84,14 @@ def splitImage(im):
         x+=1
     return images
 
-def parseImages(image):
+
+def updateTable(parsedName, name):
+    table[parsedName] = name
+
+
+def parseImages(image, usetable):
     num = None
+    code = 0
     ocr = str(pytesseract.image_to_string(image)).replace("\n", " ").replace(",", "").split(" ")
     name = ""
     print(f"DEBUG: {ocr}")
@@ -94,10 +104,20 @@ def parseImages(image):
             name += i
         else:
             num = int(i)
+
+    name = name.replace("Envoy", "").replace("Leader", "").replace("Warlord", "").replace("Saint", "")
     if num == None:
         code = 2
-    
-    ocr = [name,num]
+    if name == "":
+        code = 3
+    if usetable:
+
+        if name in table:
+            name = table[name]
+        else:
+            code = 1
+
+    ocr = [name,num, code]
     
     
     return ocr
