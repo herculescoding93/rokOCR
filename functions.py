@@ -3,7 +3,8 @@ import cv2
 from PIL import Image, ImageDraw, ImageFont
 import pytesseract
 import json
-
+import string
+import re
 with open('table.json', 'r') as file:
     table = json.load(file)
     file.close()
@@ -72,7 +73,7 @@ def splitImage(im):
     x=1
     images = []
     for i in diff:
-        nim = im.crop((0,i[0]+10, im.size[0], i[1]-10))
+        nim = im.crop((0,i[0]+10, im.size[0], i[1]-15))
         pixels = nim.load()
         open_cv_image = np.array(nim)
         open_cv_image = open_cv_image[:, :, ::-1].copy()
@@ -96,33 +97,44 @@ def writeTable():
 
     
 
-def parseImages(image, usetable):
+def parseImages(image, usetable, crop=False):
     num = None
     code = 0
-    ocr = str(pytesseract.image_to_string(image)).replace("\n", " ").replace(",", "").split(" ")
+    if not crop:
+        ocr = str(pytesseract.image_to_string(image)).replace("\n", " ").replace(",", "").split(" ")
+    else:
+        PIL_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)) 
+        ocr = str(pytesseract.image_to_string(PIL_image.crop((0+13,0, PIL_image.width //2.5, PIL_image.height-5)))).replace("\n", " ").replace(",", "").split(" ")
+        ocr = ocr + str(pytesseract.image_to_string(PIL_image.crop((PIL_image.width //3,0, PIL_image.width, PIL_image.height-5)))).replace("\n", " ").replace(",", "").split(" ") 
     name = ""
-    print(f"DEBUG: {ocr}")
+    print(f"DEBUG {ocr}")
     for idx, i in enumerate(ocr):
         if len(i) <=2 and not i.isnumeric():
             del ocr[idx]
             continue
     for i in ocr:    
-        if not i.isnumeric():
-            name += i
+        f = i.replace(".", "")
+        if not f.isnumeric():
+            name += f
         else:
-            num = int(i)
+            num = int(f)
+            print("Integer Defined")
 
     name = name.replace("Envoy", "").replace("Leader", "").replace("Warlord", "").replace("Saint", "")
-    if num == None:
+    # print(f"EMERGENCY: {not any(c.isalpha() for c in name)}")
+    if num == None and not crop:
         num = 0
-    if name == "":
-        code = 3
+
     if usetable:
         if name in table:
             name = table[name]
         else:
             code = 1
-
+    # print(f"hope: {name}, {not any(c.isalpha() for c in name)}")
+    if not any(c.isalpha() for c in name) and not crop:
+        print("emegency ran")
+        return ["", 0, 4]
+        
     ocr = [name,num, code]
     
     

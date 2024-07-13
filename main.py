@@ -22,7 +22,7 @@ class User():
     def updateBuilding(self, building:int):
         self.building = building
     def updateHelps(self, helps:int):
-        self.building = helps
+        self.helps = helps
     def userInfo(self):
         return {"name": self.name, "power": self.power, "helps": self.helps, "tech": self.tech, "building": self.building}
 # reader = easyocr.Reader(['en'])
@@ -36,8 +36,10 @@ bewareOf = []
 
 data = {}
 files = []
+
 for i in os.listdir("Images"):
     files.append("Images/" + i)
+
 for file in files:
     res = functions.splitImage(Image.open(file))
     for i in res:
@@ -45,6 +47,11 @@ for file in files:
         name = parse[0]
         value = parse[1]
         repCode = parse[2]
+        if repCode == 4:
+            parse = functions.parseImages(i, True, crop=True)
+            name = parse[0]
+            value = parse[1]
+            repCode = parse[2]
         if repCode == 1:
             cv2.imshow("Lookup Failure", i)
             cv2.waitKey(1)
@@ -53,6 +60,12 @@ for file in files:
             functions.writeTable()
             print("Updated table")
             name = realName
+        if repCode == 3:
+            cv2.imshow("Lookup Failure | NO NAME DETECTED!", i)
+            cv2.waitKey(1)
+            realName = input("Lookup Failed, can you please type the name shown in the image?\n")
+            name = realName            
+        
         if repCode == 2:
             value = 0
         if name in data:
@@ -64,6 +77,8 @@ for file in files:
                 data[name].updateBuilding(value)
             if "power" in file.lower():
                 data[name].updatePower(value)
+            if "helps" in file.lower():
+                data[name].updateHelps(value)
         else:
 
             user = User(name)
@@ -75,11 +90,20 @@ for file in files:
                 user.updateBuilding(value)
             if "power" in file.lower():
                 user.updatePower(value)
+            if "helps" in file.lower():
+                user.updateHelps(value)
             data[name] = user
 
 for i in data.values():
     res = i.userInfo()
     print(f"{res['name']}, tech: {res['tech']}, building: {res['building']}")
 
-
+alliance = "Earthquake"
+with open('profiles1.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    fields = ["username", "alliance", "power", "helps", "", "tech", "", "building"]
+    writer.writerow(fields)
+    for i in data.values():
+        userData = i.userInfo()
+        writer.writerow([userData["name"], alliance, userData["power"], userData["helps"], "", userData["tech"], "", userData["building"]])
 # result = reader.readtext('output/User.1.png')
