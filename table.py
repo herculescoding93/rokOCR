@@ -5,7 +5,7 @@ import cv2
 import json 
 
 names = {}
-for i in functions.splitImage(Image.open("Images/building.png")):
+for i in functions.splitImage(Image.open("Images/power.png")):
     time.sleep(0.1)
     cv2.imshow("OCR Table Maker", i)
     cv2.waitKey(1)

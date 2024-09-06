@@ -3,7 +3,7 @@ import math
 import cv2
 import numpy as np
 import os
-import pytesseract
+
 import functions
 import csv
 
@@ -33,46 +33,38 @@ bewareOf = []
 
 
 
-
 data = {}
 files = []
 
 for i in os.listdir("Images"):
+    if os.path.isdir("Images/" + i):
+        continue
     files.append("Images/" + i)
 
+
+print("Initializing...")
 for file in files:
     res = functions.splitImage(Image.open(file))
     for i in res:
-        parse = functions.parseImages(i, True)
+        parse = functions.findMatch(i[0])
+        print(parse)
+        repCode= parse[2]
         name = parse[0]
-        value = parse[1]
-        repCode = parse[2]
-        if repCode == 4:
-            parse = functions.parseImages(i, True, crop=True)
-            name = parse[0]
-            value = parse[1]
-            repCode = parse[2]
+        value = functions.readNumber(i[1])
+        similarity = parse[1]
         if repCode == 1:
-            cv2.imshow("Lookup Failure", i)
+            cv2.imshow("Lookup Failure", i[0])
             cv2.waitKey(1)
-            realName = input("Lookup Failed, can you please type the name shown in the image?\n")
-            functions.updateTable(parse[0], realName)
-            functions.writeTable()
-            print("Updated table")
-            name = realName
-        if repCode == 3:
-            cv2.imshow("Lookup Failure | NO NAME DETECTED!", i)
-            cv2.waitKey(1)
-            realName = input("Lookup Failed, can you please type the name shown in the image?\n")
-            name = realName            
-        
-        if repCode == 2:
-            value = 0
+            realName = input("Lookup Failed, can you please type the name shown in the image?\n").lower.replace(" ", "")
+            functions.updateImgTable(i[0], realName)
+        print(f"Name: {name}, Value: {value}")
+
         if name in data:
             if "tech" in file.lower():
                 data[name].updateTech(value)
             if "power" in file.lower():
                 data[name].updatePower(value)
+                # data[name].updateHelps(parse[3])
             if "building" in file.lower():
                 data[name].updateBuilding(value)
             if "power" in file.lower():
@@ -86,6 +78,7 @@ for file in files:
                 user.updateTech(value)
             if "power" in file.lower():
                 user.updatePower(value)
+                # user.updateHelps(parse[3])
             if "building" in file.lower():
                 user.updateBuilding(value)
             if "power" in file.lower():
